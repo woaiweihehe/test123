@@ -1,0 +1,226 @@
+Git管理源代码特点：
+1.Git 是分布式管理 服务器和客户端都有版本控制能力，都能进行代码的提交，合并。
+2.Git会在根目录下创建一个.git隐藏文件夹，作为本地代码仓库。
+工作区：对于添加、修改、删除文件的操作，都发生在工作区中    暂存区：暂存区指将工作区中的操作完成小阶段的存储，是版本库的一部分
+版本库：    仓库区：仓库区表示个人开发的一个小阶段的完成
+	* 
+仓库区中记录的各版本是可以查看并回退的
+	* 
+但是在暂存区的版本一旦提交就再也没有了
+
+
+服务器：
+
+本地仓库操作：
+1.安装git                      sudo apt-get install git
+2.查看git安装结果。     git
+3.在桌面创建test文件夹，表示是工作目录。
+4.创建本地仓库。
+mkdir test
+    1.进入到test,并创建本地仓库 .git         git init    
+    2.新创建的本地仓库  .git是个空仓库。
+5.配置个人信息：
+    git config user.name '张三'
+    git config user.email 'zhangsan@163.com'、
+6.新建py文件：
+    在项目文件test里面创建login.py文件，用于版本控制演示。
+7.查看文件状态：
+    git status
+    红色表示新建文件或者新修改的文件，都在工作区。
+    绿色表示文件都在暂存区。
+8.将工作区文件添加到缓存区：
+    添加项目中所有文件          git add .
+    添加指定文件                    git add login.py
+9.将暂存区文件提交到仓库区：
+    git commit -m '版本描述'
+
+10.接下来就可以在login.py文件中编辑代码
+    然后进行add  commit
+    一步到位：git commit -am '版本描述’不推荐使用。
+11.查看历史版本：
+    git log
+或者
+    git reflog
+12.回退版本：
+HEAD 表示当前最新版本
+HEAD^ 表示当前最新版本的前一个版本。  HEAD~1
+HEAD^^ 表示当前最新版本的前两个版本。HEAD~2
+~~~~~~git  reset --hard HEAD^
+~~~~~~git  reset --hard 版本号
+13.撤销修改：
+    只能撤销工作区，暂存区的代码，不能撤销仓库区的代码
+    撤销仓库区的代码就相当于回退版本操作。
+        撤销工作区的代码：git checkout 文件名
+        撤销暂存区-->工作区的代码：git reset HEAD 文件名
+        撤销工作区的代码： git checkout 文件名
+15.删除文件：
+rm  test.py   删除test文件
+git  status
+git  rm  test.py  确定删除test文件
+git  commit -m '将删除记录到版本库'
+误删处理：
+              rm test.py
+              git status
+              git checkout --test.py  撤销删除test文件操作。
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~·
+GIT远程仓库Github
+
+创建远程仓库 
+1.登录注册Github
+2.创建仓库入口        New repository
+3.编辑仓库信息        忽略文件：python            Add a License : MIT License  权限
+create repository
+4.仓库创建完成
+5.查看仓库地址
+1.  Clone or download---->Clone with SSH (需要配置SSH)
+
+    配置SSH
+    1.配置SSH公钥入口：Setting
+    Title : 随便写            Key: 终端生成SSH公钥。
+
+2.修改电脑git配置
+    配置Github注册邮箱和用户名
+
+         vi .gitconfig
+# .gitconfig在创建init的时候就已经存在。在家目录下。
+
+         [user]
+                    email = zhangjiesharp@163.com
+                    name = zhangxiaochuZXC
+# 此处填写的是github的注册信息，用户名和邮箱。
+3.生成SSH公钥
+    ssh-keygen -t rsa -C "zhangjiesharp@163.com"
+    cd .ssh/         # 进入到密钥文件夹
+    ll  查看文件的详细信息。
+    cat  id_res.pub   # 打开公钥的内容。
+
+然后复制公钥的内容到github上。
+此处是不对称加密，客户端是私钥加密，github是公钥解密。push ,clone时；
+pull 时，是公钥加密，私钥解密。
+
+删除 ~/.ssh 目录，这里存储了旧的密钥
+rm -r .ssh
+
+克隆项目：
+    进入到经理的项目文件夹：/manager/
+    git clone git@github.com:zhangxiaochuZXC/test007.git
+    
+    解决可能出现的密码钥匙错误：        
+        eval "$(ssh-agent -s)"
+        ssh-add
+身份信息要配置好。
+然后，manager在拉去下来的文件新建一个文件夹，（当然要配置好自己的manager信息）;
+进入到新建文件的目录下。然后，将其git add .    git commit -m '立项'; 然后将其提交到github上去。
+
+如果，张三第一次，就要配置好个人信息，然后将文件从GitHub上git pull下来。
+
+多人协同开发：要在提交之前，一定要先pull内容下来，然后再push，
+否则，就会出现代码冲突，谁引起的冲突，就改谁，将引起冲突的文件修改成原来的样子，git add .  git commit -m '解决代码冲突' git push上去。
+当不是第一次克隆时，应该进入到/manager/test/中，git pull 
+
+                      然后进入到编辑模式；add.   commit   push
+
+解决完冲突代码，依然需要add.commit .push
+
+标签：记录大版本   备份大版本代码
+
+模拟经理打标签：
+/manager/test/
+git tag -a 标签名 -m '标签描述'          本地标签名
+git push origin 标签名                       远程标签名
+
+删除本地标签和远程标签：
+git tag -d 标签名                                       # 删除本地标签名。
+git push origin --delete tag 标签名         # 删除远程仓库标签。
+
+
+分支：研究新的功能或者攻关难题，解决线上BUG
+各个分支的代码互相不会干扰；master是默认分支，开发完成之后，需要默认的合并到master分支。
+
+/manager/test/
+git branch        # 查看当前分支；当前的分支是只有master
+
+git checkout -b dev   # 创建dev 分支。创建dev分支，在master里面，在dev中都是可以创建的。
+git branch 执行命令，就直接切换到dev分支。
+
+经理在dev编辑代码；然后再提交。add .  commit  push 
+
+分支合并:/manager/test/
+1. 先切换到master分支 : git checkout master
+2.分支合并到master分支：git merge dev
+合并分支默认在本地完成，合并后直接推送即可：git push 
+以上完成了dev分支的编辑并且合并。
+
+出现了BUG 分支：
+/zhangsan/test/
+git branch  ----->master
+git checkout dev 切换到dev分支
+
+////
+
+如果发现其它的地方出现了之前版本的BUG;记录未提交的修改；保留现场。
+git   stash 
+张三解决线上v1.0版本bug
+\\
+张三切换到master分支:: git checkout master
+新建fixbug分支，并下载v1.0版本的代码到fixbug分支 
+git checkout -b fixbug v1.0 
+\\
+编辑修改
+
+管理fixbug分支代码：：add、commit、push
+合并fixbug分支到master分支，并推送到远程仓库
+# 切换到master分支
+git checkout master
+# 合并fixbug分支到master分支
+git merge fixbug
+# 推送合并到远程仓库
+git push
+由经理再打一个标签。
+、、、、、、、、
+张三将fixbug分支合并到dev分支
+	* 
+当把未提交的修改提交后，即可将fixbug合并到dev
+	* 
+保证张三现在开发的版本不会有v1.0版本遗留问题
+# 切换到dev分支
+git checkout dev
+# 合并fixbug分支到dev分支
+git merge fixbug
+# 推送
+git push
+
+
+
+张三恢复dev分支未提交的修改：
+进入到原来未开发完成的文件内：
+/zhangsan/test/
+git branch
+    git stash list
+恢复现场：
+    git stash pop
+
+然后会将原来的内容显示出来，自己再开发完成。
+然后，提交，合并到主分支；然后再由经理去打标签。            
+到目前为止：v1.0版本bug解决了，v2.0也开发完成了合并分支禁用Fast Forward模式
+	* 
+在合并分支时，默认采用Fast Forward模式
+	* 
+该模式没有分支合并的版本记录
+	* 
+如果需要在合并分支时记录版本需要禁用Fast Forward模式
+git merge --no-ff -m '合并描述' 分支名
+
+
+
+
+
+
+
+
+
+
+
+
+
+

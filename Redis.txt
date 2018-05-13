@@ -1,0 +1,154 @@
+1.展示的商品信息保存在mysql数据库，我们需要磁盘性关系型数据库。
+2.要求响应速度快；数据量不大；数据之间没有太大联系。选择非关系型内存性的数据库-Redis。
+3.客户端操作就调用redis-cli,服务端操作就调用redis-server。
+4.启动reids-sever,使用redis-cli去连接服务端。
+sudo redis-server /etc/redis/redis.conf
+/etc/redis$ : redis-cli -h 192.168.141.1
+5.nosql介绍：不支持sql语法，是以key-value的形式存储的。
+Nosql的产品种类常用的用：Mongodb,Redis。
+不是一种通用性的语言，每一种产品都有一种新的存储方式。
+nosql基本不支持事务。
+6.redis是基于内存的可持久化的日志型。（内存里面去存，默认向
+数据文件
+    dbfilename dump.rdb里面去同步。
+）
+redis可以把数据向磁盘里面去写。
+redis的所有操作都是原子性的，（原子性的操作就是不可分割的操作：就是读写分离就叫做分割），线程安全的数据库，不会出现读写同时进行的场景。
+redis可以用来做缓存，（可以缓存主页（不常变），当用户访问完主页后，我们就立即将主页缓存下来。当后面用户来访问时，就可以将其从缓存数据中读取出来。
+响应的速度更快一些，会将主页的数据转成字符串存储，跟其他方面是没有关联的。要求响应速度快，redis就是内存性数据库。）
+redis也是可以用于存储session数据。（状态保持使用的是django-session数据库表去存的，）需要将session数据存储到redis数据库中（要求的响应速度快），购物车。
+7.redis与python做交互：
+
+在python项目中与redis做交互：
+pip install redis
+使用strictRedis这个模块
+sr = StrictRedis(host="",port=6379,db=0）
+以面向对象的形式去操作redis。
+
+# 使用StrictRedis这个类,跟redis数据库交互,演练string类型数据的增删改查
+# 因为我把redis模块,安装py3,所以要在py3的环境下运行
+
+from redis import StrictRedis：：
+
+if __name__ == '__main__':
+
+	try:
+		# 创建StrictRedis对象
+		sr = StrictRedis(host='192.168.90.51', port=6379, db=0)
+
+		# 调用对应API,操作string
+		# 新增
+		result = sr.set('test_sr','ok?')
+		# 修改
+		# sr.set('test_sr', 'ok!!!')
+		# 查询
+		# sr.get('test_sr')
+		# 删除
+		# sr.delete('test_sr')
+
+		print(result)
+	except Exception as e:
+		print(e)
+		raise e
+	
+
+8.redis与django项目做交互：
+配置路由，视图。
+因为session是默认存储在mysql数据库中的django-session数据库表中，所以我们要引导session的存储：
+
+首先：pip install django-redis-sessions==0.5.6
+
+修改settings文件，增加如下项
+
+    SESSION_ENGINE = 'redis_sessions.session'
+    SESSION_REDIS_HOST = 'localhost'
+    SESSION_REDIS_PORT = 6379
+    SESSION_REDIS_DB = 2
+    SESSION_REDIS_PASSWORD = ''
+    SESSION_REDIS_PREFIX = 'session' # 此块就是存储在redis数据库中使用的session前缀，将此前缀加在key值前面，便于查找。
+
+request.session['name']='itheima'
+
+9.搭建主从：
+因为是将session数据引导到redis数据库中，万一redis数据库挂了，就完了。
+
+master可以用来写数据，slave用来读数据，经统计：网站的读写比率是10:1
+因为session在开发中，主要就是为了让客户有更好地体验，所以响应速度就是必须要快。
+如果我们为了测试，虽然是同一个IP,但是port不同，也是可以实现应用的不同。
+
+10.redis的集群：
+
+主服务是可以读，写，但是从服务是只可以读的，如果主服务挂掉，那么从服务也就不能完成任务。
+
+多主多从就是集群的概念。
+
+集群：一组通过网络连接的计算机；共同对外提供服务像一个独立的服务器。链接到任何一台电脑，都是可以完成读写工作的，因为已经链接到集群了。
+
+redis集群：
+软件层面：只有一台电脑，在这一台电脑上启动了多个redis服务。
+硬件层面：存在多台实体的电脑，每台电脑都启动了一个redis或多个redis服务。
+
+首先：在桌面上建一个文件夹conf，计划里面配置3个主从。
+7001.conf
+port 7001
+bind 172.16.179.130
+daemonize yes
+pidfile 7001.pid
+cluster-enabled yes
+cluster-config-file 7001_node.conf
+cluster-node-timeout 15000
+appendonly yes
+
+每个文件里面都进行配置，并且运行每个redis-server文件。
+conf$:redis-server 7001.conf
+
+执行此命令，以便于可以在任何目录调用redis-trib.rb。
+sudo cp /usr/share/doc/redis-tools/examples/redis-trib.rb /usr/local/bin/
+
+安装ruby环境，因为redis-trib.rb是?ruby开发的
+    sudo apt-get install ruby
+
+redis-trib.rb create --replicas 1 172.16.179.130:7000 172.16.179.130:7001 172.16.179.130:7002 172.16.179.131:7003 172.16.179.131:7004 172.16.179.131:7005 
+# 里面的1，表示的是一主一从的意思。
+
+然后，进行数据验证：
+在从服务中写入数据，set name "weihehe" ,也是会重定向master中的（根据key值经过处理后，会将其分配到对应的卡槽中。），可以得到数据。
+
+使用python可集群做交互：
+pip install redis-py-cluster
+
+from rediscluster import *
+
+if __name__ == '__main__':
+  try:
+      # 构建所有的节点，Redis会使?CRC16算法，将键和值写到某个节点上
+      startup_nodes = [
+          {'host': '192.168.26.128', 'port': '7000'},
+          {'host': '192.168.26.130', 'port': '7003'},
+          {'host': '192.168.26.128', 'port': '7001'},
+      ]
+      # 构建StrictRedisCluster对象
+      src=StrictRedisCluster(startup_nodes=startup_nodes,decode_responses=True)
+      # 设置键为name、值为itheima的数据
+      result=src.set('name','itheima')
+      print(result)
+      # 获取键为name
+      name = src.get('name')
+      print(name)
+  except Exception as e:
+      print(e)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
