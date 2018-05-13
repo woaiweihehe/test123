@@ -133,6 +133,10 @@ git push origin 标签名                       远程标签名
 git tag -d 标签名                                       # 删除本地标签名。
 git push origin --delete tag 标签名         # 删除远程仓库标签。
 
+删除本地dev分支：
+git branch -D dev 
+删除远程dev分支：
+git branch origin --delete dev
 
 分支：研究新的功能或者攻关难题，解决线上BUG
 各个分支的代码互相不会干扰；master是默认分支，开发完成之后，需要默认的合并到master分支。
@@ -166,10 +170,6 @@ git   stash
 新建fixbug分支，并下载v1.0版本的代码到fixbug分支 
 git checkout -b fixbug v1.0 
 \\
-删除本地dev分支：
-git branch -D dev 
-删除远程dev分支：
-git branch origin --delete dev
 
 编辑修改
 
