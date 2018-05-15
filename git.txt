@@ -136,7 +136,7 @@ git push origin --delete tag 标签名         # 删除远程仓库标签。
 删除本地dev分支：
 git branch -D dev 
 删除远程dev分支：
-git branch origin --delete dev
+git push origin --delete dev
 
 分支：研究新的功能或者攻关难题，解决线上BUG
 各个分支的代码互相不会干扰；master是默认分支，开发完成之后，需要默认的合并到master分支。
